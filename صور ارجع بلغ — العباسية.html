@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صور ارجع بلغ — العباسية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--road:#6c7c2c;--paper:#fafaf4;--line:#e8b923;--ink:#222715;--mute:#6a7058;--red:#c8372d;--org:#e07a1f;--grn:#3d7a4a}
+*{box-sizing:border-box}
+body{margin:0;font-family:Tajawal,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+header{background:var(--road);color:#fff;padding:22px 20px 26px;border-bottom:6px dashed var(--line)}
+header h1{margin:0;font-size:32px;font-weight:900}
+header p{margin:4px 0 0;color:#e4e9d0}
+main{max-width:620px;margin:0 auto;padding:20px}
+.hide{display:none!important}
+.sr{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+label.primary,label.ghost{display:block;text-align:center;padding:12px 18px;border-radius:6px;font-weight:700;cursor:pointer;margin-top:10px}
+input[type=text]{width:100%;padding:12px;border:2px solid var(--road);border-radius:6px;font:inherit;margin:8px 0;background:#fff}
+button{font:inherit;cursor:pointer;border:0;border-radius:6px;padding:12px 18px;font-weight:700}
+button:focus-visible,input:focus-visible{outline:3px solid var(--line);outline-offset:2px}
+.primary{background:var(--road);color:#fff;width:100%;font-size:18px}
+.ghost{background:transparent;border:2px solid var(--road);color:var(--road)}
+#login{text-align:center;padding-top:30px}
+#gbtn{display:flex;justify-content:center;margin:20px 0}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.pick button{background:#fff;border:2px solid var(--road);text-align:right}
+.pick button[aria-pressed=true]{background:var(--road);color:#fff}
+.pick small{display:block;font-weight:400;color:inherit;opacity:.75}
+#prev{width:100%;border-radius:6px;margin-top:12px;max-height:300px;object-fit:cover}
+#status{color:var(--mute);min-height:1.6em}
+.item{display:flex;gap:12px;background:#fff;box-shadow:0 0 0 1px #e1e4d2;padding:10px;border-radius:6px;margin:8px 0;border-right:8px solid var(--mute)}
+.item img{width:64px;height:64px;object-fit:cover;border-radius:4px}
+.item b{display:block}
+.L-big{border-color:var(--red)}.L-pile{border-color:var(--org)}.L-mid{border-color:var(--line)}.L-small{border-color:var(--grn)}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:26px}
+h2{margin:0;font-size:22px}
+@media (prefers-reduced-motion:no-preference){header{animation:d .6s}@keyframes d{from{border-bottom-width:0}}}
+</style>
+</head>
+<body>
+<header><h1>صور ارجع بلغ</h1><p>بلّغ عن حفر الطريق في منطقة العباسية</p></header>
+<main>
+
+<section id="login">
+  <h2>سجّل دخولك أولاً</h2>
+  <p>ندخل بحساب جوجل حتى نعرف مين بلّغ.</p>
+  <div id="gbtn"></div>
+  <p>أو ادخل باسمك:</p>
+  <input type="text" id="nm" placeholder="اسمك">
+  <button class="primary" id="demo">ادخل</button>
+</section>
+
+<section id="app" class="hide">
+  <div class="row" style="margin-top:0"><span id="who"></span><button class="ghost" id="out">خروج</button></div>
+
+  <h2 style="margin-top:18px">بلّغ عن حفرة</h2>
+  <input type="file" id="file" accept="image/*" capture="environment" class="sr">
+  <input type="file" id="file2" accept="image/*" class="sr">
+  <label class="primary" for="file">صوّر الحفرة (فتح الكاميرا)</label>
+  <button class="primary" id="live" style="margin-top:10px">افتح الكاميرا داخل الصفحة</button>
+  <div id="cam" class="hide"><video id="vid" autoplay playsinline muted style="width:100%;border-radius:6px;margin-top:10px"></video><button class="primary" id="snap" style="margin-top:8px">التقط الصورة</button></div>
+  <label class="ghost" for="file2">أو اختر صورة من المعرض</label>
+  <img id="prev" class="hide" alt="صورة الحفرة">
+  <p id="status"></p>
+
+  <div id="manual" class="hide">
+    <input type="text" id="street" placeholder="اسم الشارع أو الحي">
+    <p>اختر حجم الحفرة:</p>
+    <div class="pick" id="levels"></div>
+    <button class="primary" id="save">احفظ البلاغ</button>
+  </div>
+
+  <div class="row"><h2>البلاغات حسب الأولوية</h2><span id="count"></span></div>
+  <div id="list"></div>
+  <button class="primary" id="send" style="margin-top:14px">أرسل البلاغات</button>
+</section>
+</main>
+
+<script>
+/* ===== إعدادات: عدّلها ===== */
+const GOOGLE_CLIENT_ID = "";        // من Google Cloud Console (OAuth Web client)
+const PHONE = "9613854280";        // لبنان 03 854 280 بصيغة دولية
+const AI_ENDPOINT = "";             // رابط الخادم اللي يقيّم الصورة، يرجّع {"level":"big|pile|mid|small"}
+
+const LEVELS = {
+  big:  {name:"حفرة كبيرة", hint:"خطر على السيارات", w:100},
+  pile: {name:"حفر صغيرة متراكمة", hint:"كثيرة جنب بعض", w:80},
+  mid:  {name:"حفرة عادية", hint:"متوسطة الحجم", w:40},
+  small:{name:"حفرة صغيرة", hint:"حفرة وحدة صغيرة", w:15}
+};
+const $ = id => document.getElementById(id);
+const store = {get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
+               set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let user = store.get("user",null), reports = store.get("reports",[]), cur = null, level = null;
+
+/* ===== الدخول ===== */
+function enter(u){ user=u; store.set("user",u); $("login").classList.add("hide"); $("app").classList.remove("hide"); $("who").textContent="مرحباً "+u.name; render(); }
+function parseJwt(t){ return JSON.parse(decodeURIComponent(escape(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))))); }
+window.addEventListener("load",()=>{
+  if(GOOGLE_CLIENT_ID && window.google){
+    google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:r=>{const p=parseJwt(r.credential);enter({name:p.name,email:p.email});}});
+    google.accounts.id.renderButton($("gbtn"),{theme:"outline",size:"large",locale:"ar"});
+  } else { $("gbtn").textContent="(ضع GOOGLE_CLIENT_ID لتفعيل دخول جوجل)"; }
+  if(user) enter(user);
+});
+$("demo").onclick=()=>enter({name:$("nm").value.trim()||"مستخدم",email:""});
+$("out").onclick=()=>{store.set("user",null);location.reload();};
+
+/* ===== التصوير والتقييم ===== */
+const onPick=async e=>{const f=e.target.files[0]; if(!f) return; await handle(await shrink(f)); e.target.value="";};
+async function handle(img){
+  cur={img,pos:null}; level=null;
+  $("prev").src=img; $("prev").classList.remove("hide");
+  $("status").textContent="جاري تحديد الموقع والتقييم…";
+  navigator.geolocation?.getCurrentPosition(p=>cur.pos={lat:p.coords.latitude,lng:p.coords.longitude},()=>{},{enableHighAccuracy:true,timeout:8000});
+  let lv=null;
+  if(AI_ENDPOINT){ try{ const r=await fetch(AI_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:img})}); lv=(await r.json()).level; }catch{} }
+  if(lv&&LEVELS[lv]){ level=lv; $("status").textContent="التقييم: "+LEVELS[lv].name; }
+  else $("status").textContent= AI_ENDPOINT ? "ما قدرنا نقيّم تلقائياً، اختر يدوياً." : "التقييم التلقائي غير مفعّل، اختر الحجم يدوياً.";
+  showLevels();
+}
+let stream;
+$("live").onclick=async()=>{try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});$("vid").srcObject=stream;$("cam").classList.remove("hide");}catch{$("status").textContent="الكاميرا غير مسموحة هنا. افتح الرابط في Safari أو Chrome واسمح بالكاميرا.";}};
+$("snap").onclick=()=>{const v=$("vid"),k=Math.min(1,900/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement("canvas");c.width=v.videoWidth*k;c.height=v.videoHeight*k;c.getContext("2d").drawImage(v,0,0,c.width,c.height);stream.getTracks().forEach(t=>t.stop());$("cam").classList.add("hide");handle(c.toDataURL("image/jpeg",.7));};
+$("file").onchange=onPick; $("file2").onchange=onPick;
+function shrink(file){ return new Promise(res=>{ const i=new Image(); i.onload=()=>{const s=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7));}; i.src=URL.createObjectURL(file); }); }
+function showLevels(){
+  $("manual").classList.remove("hide"); const box=$("levels"); box.innerHTML="";
+  for(const k in LEVELS){ const b=document.createElement("button"); b.setAttribute("aria-pressed",k===level);
+    b.innerHTML=LEVELS[k].name+"<small>"+LEVELS[k].hint+"</small>";
+    b.onclick=()=>{level=k;showLevels();}; box.appendChild(b); }
+}
+$("save").onclick=()=>{
+  if(!cur||!level){ $("status").textContent="اختر الحجم أولاً."; return; }
+  reports.push({id:Date.now(),img:cur.img,pos:cur.pos,level,by:user?.name||"",street:$("street").value.trim(),t:new Date().toISOString()});
+  if(!store.set("reports",reports)){}
+  $("street").value=""; cur=null; level=null; $("prev").classList.add("hide"); $("manual").classList.add("hide"); $("status").textContent="انحفظ البلاغ."; render();
+};
+
+/* ===== الأولوية حسب التراكم ===== */
+function dist(a,b){ if(!a||!b) return 1e9; const R=6371000,r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dg=r(b.lng-a.lng);
+  const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dg/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function scored(){ return reports.map(r=>{ const near=reports.filter(o=>o.id!==r.id&&dist(o.pos,r.pos)<50).length;
+  return {...r,near,score:LEVELS[r.level].w*(1+0.3*near)}; }).sort((a,b)=>b.score-a.score); }
+function render(){
+  const L=scored(); $("count").textContent=L.length+" بلاغ"; $("list").innerHTML="";
+  if(!L.length){ $("list").textContent="لا يوجد بلاغات بعد. صوّر أول حفرة."; return; }
+  L.forEach(r=>{ const d=document.createElement("div"); d.className="item L-"+r.level;
+    d.innerHTML='<img alt=""><div><b></b><span></span></div>'; d.querySelector("img").src=r.img;
+    d.querySelector("b").textContent=LEVELS[r.level].name+(r.street?" — "+r.street:"");
+    d.querySelector("span").textContent=r.near? "بجانبها "+r.near+" بلاغات أخرى (تراكم)" : (r.pos?"موقع محدد":"بدون موقع");
+    $("list").appendChild(d); });
+}
+
+/* ===== الإرسال ===== */
+$("send").onclick=async()=>{
+  const L=scored(); if(!L.length){ $("status").textContent="ما في بلاغات للإرسال."; return; }
+  if(!PHONE){ $("status").textContent="ضع رقم الاستلام في PHONE أولاً."; return; }
+  const txt="بلاغات حفر — العباسية (الأهم أولاً)\n"+L.map((r,i)=>(i+1)+") "+LEVELS[r.level].name+(r.street?" — "+r.street:"")+(r.near?" — تراكم "+(r.near+1)+" بلاغات":"")+(r.pos?" — https://maps.google.com/?q="+r.pos.lat+","+r.pos.lng:"")).join("\n");
+  try{ const files=await Promise.all(L.slice(0,5).map(async(r,i)=>new File([await (await fetch(r.img)).blob()],"pothole"+(i+1)+".jpg",{type:"image/jpeg"})));
+    if(navigator.canShare&&navigator.canShare({files})){ await navigator.share({text:txt,files}); return; } }catch{}
+  window.open("https://wa.me/"+PHONE+"?text="+encodeURIComponent(txt),"_blank");
+};
+</script>
+</body>
+</html>
